@@ -1,0 +1,148 @@
+//---------------------------------------------------------------------------
+
+#include <vcl.h>
+
+#include "Kuznechik.cpp"
+#pragma hdrstop
+
+#include "FormUnit.h"
+//---------------------------------------------------------------------------
+#pragma package(smart_init)
+#pragma resource "*.dfm"
+TForm1 *Form1;
+
+//---------------------------------------------------------------------------
+
+bool TForm1::CheckOption()
+{
+	bool errf=false;
+	if (!FileExists(OpenDialogFile->FileName, false))
+	{
+		LogMemo->Lines->Add("ERR: File "+OpenDialogFile->FileName+" not found!");
+		errf=true;
+	}
+}
+//---------------------------------------------------------------------------
+
+__fastcall TForm1::TForm1(TComponent* Owner)
+	: TForm(Owner)
+{
+}
+//---------------------------------------------------------------------------
+
+
+void __fastcall TForm1::Button2Click(TObject *Sender)
+{
+	LogMemo->Clear();
+    LogMemo->Lines->Add("Log:\n");
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm1::OpenFileButtonClick(TObject *Sender)
+{
+	if (OpenDialogFile->Execute())
+	{
+		UnicodeString temp=OpenDialogFile->FileName;
+		temp= temp.SubString(temp.LastDelimiter("\\")+1,temp.Length()-temp.LastDelimiter("\\"));
+		LabelFileName->Caption=temp;
+		LogMemo->Lines->Add("INF: Open "+OpenDialogFile->FileName+" as base file.");
+	}
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm1::OpenTableButtonClick(TObject *Sender)
+{
+	if (OpenDialogTable->Execute())
+	{
+		UnicodeString temp=OpenDialogTable->FileName;
+		temp= temp.SubString(temp.LastDelimiter("\\")+1,temp.Length()-temp.LastDelimiter("\\"));
+		LabelTableName->Caption=temp;
+		LogMemo->Lines->Add("INF: Open "+OpenDialogTable->FileName+" as crypt table.");
+	}
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm1::OpenKeyButtonClick(TObject *Sender)
+{
+	if (OpenDialogKey->Execute())
+	{
+		UnicodeString temp=OpenDialogKey->FileName;
+		temp= temp.SubString(temp.LastDelimiter("\\")+1,temp.Length()-temp.LastDelimiter("\\"));
+		LabelKeyName->Caption=temp;
+
+		LogMemo->Lines->Add("INF: Open "+OpenDialogKey->FileName+" as key.");
+
+		if (RadioGroup1->ItemIndex!=0)
+			RadioGroup1->ItemIndex=0;
+	}
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm1::KeyEditChange(TObject *Sender)
+{
+	if (RadioGroup1->ItemIndex!=1)
+		RadioGroup1->ItemIndex=1;
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm1::RadioGroup1Click(TObject *Sender)
+{
+	if (RadioGroup1->ItemIndex==1)
+	{
+		LogMemo->Lines->Add("INF: Switch to manualy input key");
+	}
+	else if (RadioGroup1->ItemIndex==0)
+	{
+		LogMemo->Lines->Add("INF: Switch to read key from file");
+	}
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm1::TableButtonClick(TObject *Sender)
+{
+	if (!FileExists(OpenDialogTable->FileName, false))
+		LogMemo->Lines->Add("ERR: File "+OpenDialogTable->FileName+" not found!");
+	else
+	{
+		String filename="\""+OpenDialogTable->FileName+"\"";
+
+		FILE *f1=fopen(OpenDialogTable->FileName.t_str(), "rb");
+		if (f1==NULL)
+		{
+			LogMemo->Lines->Add("ERR: Can not open file "+OpenDialogTable->FileName+" !");
+			return;
+		}
+		StatusBar->SimpleText="Load Crypt table from"+OpenDialogTable->FileName;
+		fread(kPi,sizeof(unsigned char),256,f1);
+		fclose(f1);
+	}
+	StatusBar->SimpleText="Ready";
+	if (!FileExists(OpenDialogReverseTable->FileName, false))
+		LogMemo->Lines->Add("ERR: File "+OpenDialogReverseTable->FileName+" not found!");
+	else
+	{
+		FILE *f1=fopen((char *)OpenDialogReverseTable->FileName.data(), "rb");
+		if (f1==NULL){
+			LogMemo->Lines->Add("ERR: Can not open file "+OpenDialogReverseTable->FileName+" !");
+			return;
+		}
+		StatusBar->SimpleText="Load Crypt table from"+OpenDialogReverseTable->FileName;
+		fread(kReversePi,sizeof(unsigned char),256,f1);
+		fclose(f1);
+	}
+	StatusBar->SimpleText="Ready";
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm1::OpenReverseTableButtonClick(TObject *Sender)
+{
+	if (OpenDialogReverseTable->Execute())
+	{
+		UnicodeString temp=OpenDialogReverseTable->FileName;
+		temp= temp.SubString(temp.LastDelimiter("\\")+1,temp.Length()-temp.LastDelimiter("\\"));
+		LabelReverseTableName->Caption=temp;
+		LogMemo->Lines->Add("INF: Open "+OpenDialogReverseTable->FileName+" as reverse crypt table.");
+	}
+}
+//---------------------------------------------------------------------------
+
